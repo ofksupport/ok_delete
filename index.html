@@ -3,357 +3,42 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>OfficeKeeper 삭제 체험</title>
+<title>OfficeKeeper 에이전트 삭제 체험</title>
 <style>
-  :root{
-    --bg:#e9edf2; --card:#fff; --text:#1f2328; --muted:#5b6470; --line:#d6dbe1; --accent:#0066cc;
-    --red:#e5372c; --green:#2e7d32;
-  }
+  :root{color-scheme:light dark;--bg:#fff;--line:#e3e5e8;--tx:#37352f;--sub:#787774;--hov:#f7f7f5;--ac:#2383e2;--ac2:#1a6fc9;--tile:#eaf3fc}
+  @media (prefers-color-scheme:dark){:root{--bg:#252525;--line:#373737;--tx:#e6e6e5;--sub:#9b9b9b;--hov:#2c2c2c;--tile:#1f3448}}
   *{box-sizing:border-box}
-  html,body{overflow:hidden}
-  body{margin:0;background:transparent;color:var(--text);
-    font-family:"Malgun Gothic","맑은 고딕","Apple SD Gothic Neo","Noto Sans KR","Segoe UI",sans-serif;font-size:14px}
-  /* 노션 임베드용: 고정 크기 무대를 칸에 맞춰 통째로 확대/축소 */
-  #stage{width:904px;margin:0;padding:6px 0}
-
-  .steps{display:flex;gap:6px}
-  .step{flex:1;min-width:0;white-space:nowrap;padding:8px 10px;border-radius:6px;background:#dfe4ea;color:var(--muted);font-size:12px;display:flex;align-items:center;gap:6px}
-  .step b{display:inline-grid;place-items:center;width:20px;height:20px;border-radius:50%;background:#c3cbd4;color:#fff;font-size:11px}
-  .step.done{background:#dbe9f7;color:#2b4a6b} .step.done b{background:#6b9bd1}
-  .step.now{background:var(--accent);color:#fff} .step.now b{background:#fff;color:var(--accent)}
-
-  main{margin-top:8px;display:flex;flex-direction:column;gap:8px}
-  .desk{background:linear-gradient(135deg,#2a4d74,#1b3350);border-radius:10px;padding:16px;display:flex;justify-content:center;overflow:hidden}
-
-  /* ===== 대화상자 (원본 캡처 기준 872×540) ===== */
-  .win{width:872px;height:540px;flex:none;background:#fff;border:1px solid #7a7a7a;box-shadow:0 14px 36px rgba(0,0,0,.35);
-    display:flex;flex-direction:column;position:relative;color:#1a1a1a}
-  .titlebar{height:62px;flex:none;background:#5e5e5e;display:flex;align-items:center;padding-left:20px;user-select:none}
-  .titlebar .logo{width:32px;height:32px;flex:none;display:block}
-  .titlebar .t{flex:1;margin-left:10px;font-size:16.5px;font-weight:bold;color:#fff}
-  .titlebar button{width:36px;height:36px;margin-right:2px;border:0;background:none;cursor:pointer;display:grid;place-items:center;padding:0}
-  .titlebar button:last-child{margin-right:16px}
-  .titlebar button:hover{background:#6e6e6e} .titlebar button.x:hover{background:#e81123}
-
-  .wbody{flex:1;padding:26px 30px 0;overflow:hidden}
-  .wbody h2{margin:0 0 12px;font-size:21px;line-height:30px;font-weight:bold}
-  .wbody p{margin:0;font-size:15px;line-height:1.55}
-  .red{color:var(--red)}
-  .gap-l{margin-top:22px}
-
-  .warnbox{margin-top:22px;border:1px solid #f1b5b0;background:#fdeeee;padding:14px 18px}
-  .warnbox .h{color:var(--red);font-weight:bold;font-size:15px;margin-bottom:6px}
-  .warnbox ul{margin:0;padding:0;list-style:none}
-  .warnbox li{color:var(--red);font-size:15px;line-height:1.7}
-  .warnbox li::before{content:"• "}
-
-  .prog{margin-top:58px;height:24px;border:1px solid #d0d0d0;background:#f2f2f2;overflow:hidden}
-  .prog i{display:block;height:100%;width:0;background:#0066cc}
-  .prog.stop i{background:#6b7280}
-  .status{display:flex;justify-content:space-between;gap:16px;margin-top:18px;font-size:15px;color:#666;white-space:nowrap}
-  .status span:first-child{overflow:hidden;text-overflow:ellipsis}
-
-  .dprog{margin-top:14px;height:20px;border:1px solid #a8a8a8;background:#fff;padding:2px}
-  .dprog i{display:block;height:100%;width:0;background:#4d4d4d}
-  .pct{margin-top:8px;font-size:14px;color:#333}
-  .ulog{margin-top:8px;height:236px;border:1px solid #a8a8a8;overflow-y:auto;padding:4px 18px;font-size:14.5px;line-height:28.5px;color:#222}
-  .radios{margin-top:30px;font-size:15px}
-  .radios label{display:flex;align-items:center;gap:9px;margin-bottom:12px;cursor:pointer}
-  .radios input{width:16px;height:16px;margin:0;accent-color:#0066cc}
-  .chk{display:flex;align-items:center;gap:8px;margin-top:52px;font-size:15px;cursor:pointer}
-  .chk input{width:17px;height:17px;margin:0}
-
-  .pw{display:flex;align-items:center;margin-top:20px;font-size:15px}
-  .pw label{width:127px}
-  .pw input{width:358px;height:32px;border:1px solid #d6d6d6;border-bottom:2px solid #0066cc;font:inherit;font-size:15px;padding:0 10px;outline:none}
-
-  .tbl{border:1px solid #8f8f8f;overflow:auto;font-size:14.5px}
-  .tbl table{width:100%;border-collapse:collapse;table-layout:fixed}
-  .tbl th{position:sticky;top:0;background:#fff;font-weight:normal;text-align:left;padding:7px 10px;border-right:1px solid #e3e3e3;z-index:1}
-  .tbl td{padding:4px 10px;height:31px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-  .tbl td.r,.tbl th.r{text-align:right}
-  .tbl tr:hover td{background:#eaf3fc}
-  .tbl td.b{padding:4px 8px;text-overflow:clip}
-  .tbl .open{width:134px;height:24px;font:inherit;font-size:14px;background:#fdfdfd;border:1px solid #adadad;border-radius:2px;cursor:pointer}
-  .tbl .open:hover{background:#e5f1fb;border-color:#0078d4}
-
-  .stats{display:flex;gap:16px;margin:18px 0 18px}
-  .stats div{flex:1;height:46px;border:1px solid #cfcfcf;border-radius:4px;display:grid;place-items:center;font-size:15.5px}
-  .stats .a{color:#8a8a8a} .stats .s{color:var(--green);font-weight:bold} .stats .f{color:#d32f2f;font-weight:bold}
-
-  .wfoot{height:68px;flex:none;background:#f0f0f0;border-top:1px solid #dcdcdc;display:flex;justify-content:flex-end;align-items:center;gap:16px;padding:0 28px}
-  .btn{width:206px;height:33px;font:inherit;font-size:15px;background:#fdfdfd;border:1px solid #adadad;border-radius:3px;cursor:pointer;color:#1a1a1a}
-  .btn:hover{background:#e5f1fb;border-color:#0078d4}
-  .btn.primary{border:2px solid #0066cc}
-  .btn:disabled{color:#a6a6a6;background:#f6f6f6;border-color:#dadada;cursor:default}
-  .hints .btn.hint:not(:disabled){animation:pulse 1.4s infinite}
-  @keyframes pulse{0%{box-shadow:0 0 0 0 rgba(255,196,0,.9)}70%{box-shadow:0 0 0 8px rgba(255,196,0,0)}100%{box-shadow:0 0 0 0 rgba(255,196,0,0)}}
-
-  .toast{position:absolute;left:28px;bottom:18px;background:rgba(30,30,30,.88);color:#fff;font-size:13.5px;
-    padding:8px 14px;border-radius:4px;opacity:0;transition:opacity .2s;pointer-events:none;white-space:nowrap}
-  .toast.on{opacity:1}
-
-  /* ===== 안내 패널 ===== */
-  .guide{background:var(--card);border-radius:10px;padding:12px 16px;border:1px solid var(--line);height:146px;display:flex;gap:18px}
-  .guide #guide{flex:1;overflow:auto}
-  .guide .tag{display:inline-block;font-size:11.5px;padding:2px 8px;border-radius:10px;background:#e6f0fa;color:var(--accent);margin:0 8px 6px 0;vertical-align:2px}
-  .guide .tag.sim{background:#fff4dc;color:#8a5a00}
-  .guide h3{display:inline;margin:0;font-size:16px}
-  .guide p{margin:2px 0 6px;line-height:1.55;font-size:13.5px}
-  .guide ul{margin:2px 0 6px;padding-left:18px}
-  .guide li{margin-bottom:3px;line-height:1.5;font-size:13.5px}
-  .guide kbd{font-family:inherit;font-size:12px;background:#f3f4f6;border:1px solid #cfd4da;border-radius:4px;padding:0 5px}
-  .guide .note{background:#fff8e6;border-left:3px solid #f0b400;padding:5px 10px;font-size:13px;line-height:1.5;margin:4px 0 6px}
-  .ctrl{flex:none;width:150px;display:flex;flex-direction:column;gap:10px;justify-content:center;border-left:1px solid var(--line);padding-left:16px;font-size:12.5px}
-  .ctrl button{font:inherit;font-size:12.5px;padding:6px 12px;border-radius:6px;border:1px solid var(--line);background:#fff;cursor:pointer}
-  .ctrl button:hover{border-color:var(--accent);color:var(--accent)}
-  .log{display:none;font-size:12px;color:var(--muted);max-height:160px;overflow:auto}
-  .log div{padding:2px 0;border-bottom:1px dashed #eceff2}
+  html,body{margin:0;background:transparent;overflow:hidden}
+  body{font-family:"Malgun Gothic","맑은 고딕","Apple SD Gothic Neo","Noto Sans KR","Segoe UI",sans-serif;padding:4px 2px}
+  a.card{display:flex;align-items:center;gap:14px;max-width:560px;padding:14px 16px;border:1px solid var(--line);border-radius:10px;
+    background:var(--bg);color:var(--tx);text-decoration:none;transition:background .15s,border-color .15s}
+  a.card:hover{background:var(--hov);border-color:var(--ac)}
+  .tile{width:44px;height:44px;flex:none;border-radius:10px;background:var(--tile);display:grid;place-items:center}
+  .tile svg{width:24px;height:24px}
+  .tx{flex:1;min-width:0}
+  .tx b{display:block;font-size:15px;line-height:1.35}
+  .tx span{display:block;font-size:12.5px;color:var(--sub);margin-top:2px}
+  .go{flex:none;height:34px;padding:0 14px;border-radius:7px;background:var(--ac);color:#fff;font-size:13.5px;font-weight:bold;display:flex;align-items:center;gap:6px}
+  a.card:hover .go{background:var(--ac2)}
+  .go svg{width:13px;height:13px}
 </style>
 </head>
 <body>
-<div id="stage">
-<div class="steps" id="steps"></div>
-<main>
-  <section class="desk hints" id="desk"><div class="win" id="win"></div></section>
-  <aside class="guide">
-    <div id="guide"></div>
-    <div class="ctrl">
-      <label><input type="checkbox" id="hintToggle" checked> 다음 버튼 강조</label>
-      <button id="restart">처음부터 다시</button>
-    </div>
-    <div class="log" id="log"></div>
-  </aside>
-</main>
-</div>
-
+<a class="card" id="card" href="demo.html" target="_blank" rel="noopener">
+  <span class="tile"><svg viewBox="0 0 24 24"><path d="M5 3.5 19 12 5 20.5z" fill="#2383e2"/></svg></span>
+  <span class="tx"><b>OfficeKeeper 에이전트 삭제 체험</b><span>실제 PC에는 영향이 없는 모의 화면이에요</span></span>
+  <span class="go">체험하기<svg viewBox="0 0 13 13"><path d="M4 1.5h7.5V9M11.5 1.5 2 11" fill="none" stroke="#fff" stroke-width="1.8"/></svg></span>
+</a>
 <script>
-/* ---------- 체험 시나리오 데이터 ---------- */
-const FOUND = 193, MANUAL = 5, SCAN_TOTAL = 612480;
-const MANUAL_IDX = [3,27,64,110,150];
-const FAIL_IDX = [8,41,77,96,128,159,181];      // 해제 실패 7건
-const SEP = '₩';
-const folders = ['Documents','Documents₩보고서','Desktop','Downloads','Documents₩계약서','Documents₩2026_영업','Desktop₩회의자료','Documents₩교육'];
-const names = ['주간보고','월간실적','견적서','회의록','고객리스트','제안서','계약서_검토본','예산안','매출현황','교육자료','점검결과','요청사항'];
-const exts = ['xlsx','docx','pptx','pdf','hwp','jpg'];
-let seed = 11; const rnd = () => (seed = (seed*9301+49297)%233280)/233280;
-const files = Array.from({length:FOUND}, (_,i) => {
-  const manual = MANUAL_IDX.includes(i);
-  const kb = rnd()<0.3 ? rnd()*10+1 : rnd()*900+20;
-  const enc = manual ? 'mLDH' : 'sLDH';
-  return {
-    path:`C:${SEP}Users${SEP}user${SEP}${folders[Math.floor(rnd()*folders.length)].replaceAll('₩',SEP)}${SEP}${names[Math.floor(rnd()*names.length)]}_${String(i+1).padStart(3,'0')}.${exts[Math.floor(rnd()*exts.length)]}.${enc}`,
-    type: manual ? `.mLDH (수동 암호화)` : `.sLDH (자동 암호화)`,
-    size: kb>=1024 ? (kb/1024).toFixed(1)+' MB' : kb.toFixed(1)+' KB'
-  };
+/* 체험 화면을 알맞은 크기의 새 창(팝업)으로 열고, 팝업이 막히면 새 탭으로 엽니다 */
+const POP_W = 1240, POP_H = 740;
+document.getElementById('card').addEventListener('click', e => {
+  const sw = screen.availWidth || 1280, sh = screen.availHeight || 800;
+  const w = Math.min(POP_W, sw - 40), h = Math.min(POP_H, sh - 40);
+  const l = (screen.availLeft || 0) + Math.max(0, (sw - w) / 2), t = (screen.availTop || 0) + Math.max(0, (sh - h) / 2);
+  const win = window.open(e.currentTarget.href, 'okUninstallDemo', `popup=yes,width=${w},height=${h},left=${l},top=${t}`);
+  if (win) { e.preventDefault(); try { win.focus(); } catch (_) {} }
 });
-const failed = FAIL_IDX.map(i => files[i]);
-const fmt = n => n.toLocaleString('en-US');
-
-/* ---------- 상태 ---------- */
-const STEP_LABELS = ['삭제 시작','삭제 전 확인','해제 여부 선택','검사·해제','에이전트 삭제'];
-const STEP_OF = {start:0,confirm:1,ask:2,scan:3,stopped:3,found:3,password:3,decrypt:3,result:3,skip:4,uninstall:4,done:4,cancel:-1};
-let state='start', timer=null, scanP=0, skipCount=0, skipBack='found', mode=null;
-const $ = id => document.getElementById(id);
-function log(m){ const d=document.createElement('div'); d.textContent=m; $('log').prepend(d); }
-
-function titlebar(){
-  return `<div class="titlebar">
-    <svg class="logo" viewBox="0 0 20 20"><circle cx="10" cy="10" r="9.6" fill="#fff"/>
-      <path d="M14.6 7.2 A5.4 5.4 0 1 0 15.2 11.6" fill="none" stroke="#5e5e5e" stroke-width="1.7" stroke-linecap="round"/>
-      <path d="M7.3 10.2 L9.3 12.1 L12.9 8.3" fill="none" stroke="#5e5e5e" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg>
-    <span class="t">OfficeKeeper 삭제하기</span>
-    <button title="최소화"><svg width="20" height="20" viewBox="0 0 20 20"><path d="M2 17.5 H18" stroke="#fff" stroke-width="1.4"/></svg></button>
-    <button class="x" data-act="close" title="닫기"><svg width="20" height="20" viewBox="0 0 20 20"><path d="M2 2 L18 18 M18 2 L2 18" stroke="#fff" stroke-width="1.4"/></svg></button></div>`;
-}
-const foot = btns => `<div class="wfoot">${btns.map(b=>`<button class="btn ${b.cls||''}" data-act="${b.act}" ${b.id?`id="${b.id}"`:''} ${b.dis?'disabled':''}>${b.label}</button>`).join('')}</div>`;
-const body = html => `<div class="wbody">${html}</div>`;
-
-const VIEWS = {
-  start:()=> body(`<h2>에이전트 삭제를 시작합니다.</h2><p>'삭제' 버튼을 누르면 삭제가 시작됩니다.</p>`)
-    + foot([{label:'삭제 &gt;',act:'toConfirm',cls:'primary hint'},{label:'취소',act:'close'}]),
-
-  confirm:()=> body(`<h2>에이전트 삭제 전 확인이 필요합니다.</h2>
-      <p>에이전트를 삭제하면 오피스키퍼로 암호화한 파일을 더이상 복호화할 수 없습니다.<br>
-      에이전트의 완전 삭제를 진행하기 전에 암호화 파일 해제가 필요합니다.<br>
-      (단, 삭제 후 재설치하고자 할 경우 암호화 파일을 해제하지 않아도 됩니다.)</p>
-      <div class="warnbox"><div class="h">⚠ 주의사항</div><ul>
-        <li>수동 암호화 해제 시, 암호화 설정 당시 등록한 비밀번호가 필요합니다.</li>
-        <li>수동 암호화 비밀번호 분실 시, 기술지원센터에서 확인 및 복구 불가합니다.</li></ul></div>`)
-    + foot([{label:'삭제 &gt;',act:'toAsk',cls:'primary hint'},{label:'취소',act:'close'}]),
-
-  ask:()=> body(`<h2>PC 내 암호화 파일을 해제하시겠습니까?</h2>
-      <p>[해제 후 삭제]를 선택하면 디스크 전체를 검사하여 암호화 파일을 찾아 일괄 해제합니다.</p>
-      <p class="red gap-l">디스크 크기에 따라 검사에 시간이 오래 걸릴 수 있습니다.</p>`)
-    + foot([{label:'해제하지 않고 바로 삭제',act:'skipNow'},{label:'해제 후 삭제 &gt;',act:'toScan',cls:'primary hint'},{label:'취소',act:'close'}]),
-
-  scan:()=> body(`<h2>디스크에서 암호화 파일을 검사하고 있습니다...</h2>
-      <p>.sLDH / .mLDH 파일을 찾고 있습니다. 검사 중에도 PC를 계속 사용할 수 있습니다.</p>
-      <div class="prog"><i id="bar"></i></div>
-      <div class="status"><span>C: 검사 중...</span><span id="cnt"></span></div>`)
-    + foot([{label:'중지',act:'stopScan',cls:'primary'}]),
-
-  stopped:()=> body(`<h2>검사를 중지했습니다</h2>
-      <p>암호화 파일 검사를 중지했습니다. 이어서 검사하거나, 검사를 취소하고 바로 삭제할 수 있습니다.</p>
-      <div class="prog stop"><i style="width:${scanP*100}%"></i></div>
-      <div class="status"><span>C: 검사 중지</span><span>중지 시점까지 검사한 파일 ${fmt(scanned())} · 발견 ${foundSoFar()}건</span></div>`)
-    + foot([{label:'계속 이어서 검사',act:'resumeScan',cls:'hint'},{label:'전체 취소 후 바로 삭제',act:'stopToSkip',cls:'primary'}]),
-
-  found:()=> body(`<h2>암호화 파일 ${FOUND}건을 찾았습니다.</h2>
-      <p style="color:#555;margin-top:-6px">수동 암호화 ${MANUAL}건 · 자동 암호화 ${FOUND-MANUAL}건</p>
-      <p style="margin-top:4px">아래 파일을 일괄 해제합니다.</p>
-      <div class="tbl" style="height:238px;margin-top:12px"><table>
-        <colgroup><col><col style="width:180px"><col style="width:96px"></colgroup>
-        <thead><tr><th>파일 경로</th><th>확장자 (유형)</th><th class="r">크기</th></tr></thead>
-        <tbody>${files.map(f=>`<tr><td title="${f.path}">${f.path}</td><td>${f.type}</td><td class="r">${f.size}</td></tr>`).join('')}</tbody>
-      </table></div>`)
-    + foot([{label:'해제하지 않고 삭제',act:'foundToSkip'},{label:'일괄 해제 진행 &gt;',act:'toPassword',cls:'primary hint'},{label:'취소',act:'close'}]),
-
-  password:()=> body(`<h2>수동 암호화 파일 ${MANUAL}건의 비밀번호를 입력하세요.</h2>
-      <p>수동 암호화 파일 해제에는 암호화 시 설정한 비밀번호가 필요합니다.<br>
-      입력한 비밀번호로 전체 파일에 일괄 시도하며, 비밀번호가 다른 파일은 해제되지 않고 해제 결과에서 확인할 수 있습니다.</p>
-      <div class="pw"><label for="pwd">비밀번호</label><input type="password" id="pwd" autocomplete="off"></div>
-      <div class="warnbox" style="margin-top:28px"><ul>
-        <li>수동 암호화 해제 시, 암호화 설정 당시 등록한 비밀번호가 필요합니다.</li>
-        <li>수동 암호화 비밀번호 분실 시, 기술지원센터에서 확인 및 복구 불가합니다.</li></ul></div>`)
-    + foot([{label:'&lt; 이전',act:'back',cls:'primary'},{label:'해제 시작 &gt;',act:'toDecrypt',id:'goBtn',dis:true,cls:'hint'}]),
-
-  decrypt:()=> body(`<h2>암호화 파일을 해제하고 있습니다...</h2>
-      <p>해제가 끝날 때까지 잠시 기다려 주세요.</p>
-      <div class="prog"><i id="bar"></i></div>
-      <div class="status"><span id="cur"></span><span id="cnt"></span></div>`)
-    + foot([{label:'취소',act:'close',dis:true}]),
-
-  result:()=> body(`<h2 style="margin-bottom:4px">일부 파일을 해제하지 못했습니다.</h2>
-      <p class="red">아래 파일은 해제되지 않았습니다. 경로에서 [위치 열기] 버튼으로 해당 파일 위치를 열어 직접 해제할 수 있습니다. 해제하지 못한 파일은 에이전트 삭제 후 열 수 없습니다.</p>
-      <div class="stats"><div class="a">대상 파일 ${FOUND}건</div><div class="s">해제 성공 ${FOUND-failed.length}건</div><div class="f">실패 ${failed.length}건</div></div>
-      <div class="tbl" style="height:196px"><table>
-        <colgroup><col><col style="width:152px"><col style="width:220px"></colgroup>
-        <thead><tr><th colspan="2">파일 경로</th><th>사유</th></tr></thead>
-        <tbody>${failed.map(f=>`<tr><td title="${f.path}">${f.path}</td><td class="b"><button class="open" data-act="openLoc">위치 열기</button></td><td class="red">기타 오류</td></tr>`).join('')}</tbody>
-      </table></div>
-      <div class="toast" id="toast"></div>`)
-    + foot([{label:'재확인',act:'recheck'},{label:'다음 &gt;',act:'resultToSkip',cls:'primary hint'}]),
-
-  skip:()=> body(`<h2>암호화 파일을 해제하지 않고 에이전트를 삭제하시겠습니까?</h2>
-      <p class="red">해제되지 않은 암호화 파일 ${skipCount}건이 남아 있습니다. 에이전트를 삭제하면 남아 있는 암호화 파일은 영구적으로 열 수 없으며, 삭제 후에는 복구할 방법이 없습니다.</p>
-      <label class="chk"><input type="checkbox" id="agree"> 위 내용을 확인했으며, 암호화 파일을 해제하지 않고 에이전트를 삭제하는 것에 동의합니다.</label>`)
-    + foot([{label:'&lt; 이전',act:'back',cls:'primary'},{label:'삭제 계속 &gt;',act:'toUninstall',id:'goBtn',dis:true,cls:'hint'}]),
-
-  uninstall:()=> body(`<h2>에이전트 삭제과정을 진행중입니다...</h2>
-      <div class="dprog"><i id="bar"></i></div>
-      <div class="pct" id="pct">0%</div>
-      <div class="ulog" id="ulog"></div>`)
-    + foot([{label:'다음 &gt;',act:'none',dis:true},{label:'취소',act:'close',dis:true}]),
-
-  done:()=> body(`<h2>삭제가 완료되었습니다.</h2>
-      <p style="color:#555">일부 기능은 재부팅 후 정상 작동하오니, 시스템을 다시 시작해 주시기 바랍니다.</p>
-      <div class="radios">
-        <label><input type="radio" name="rb" checked> 지금 사용자PC를 다시 시작하겠습니다. (권장)</label>
-        <label><input type="radio" name="rb"> 나중에 다시 시작하겠습니다.</label></div>`)
-    + foot([{label:'완료',act:'restart',cls:'primary hint'}]),
-
-  cancel:()=> body(`<h2>삭제가 취소되었습니다.</h2><p>에이전트와 암호화 파일은 변경되지 않았습니다.</p>`)
-    + foot([{label:'처음으로',act:'restart',cls:'primary hint'}]),
-};
-
-/* ---------- 안내 문구 ---------- */
-const G = {
-  start:['1단계','삭제 마법사 시작',`<p>삭제를 시작하는 첫 화면입니다.</p><ul><li><kbd>삭제 &gt;</kbd> 다음 단계로 이동</li><li><kbd>취소</kbd> 마법사 종료</li></ul>`],
-  confirm:['2단계','삭제 전 확인',`<ul><li>재설치 예정이면 해제 없이 삭제해도 됩니다.</li></ul>`],
-  ask:['3단계','해제 여부 선택',`<ul><li><kbd>해제 후 삭제 &gt;</kbd> 디스크를 검사해 암호화 파일을 일괄 해제한 뒤 삭제 <b>(완전 삭제 시 권장)</b></li><li><kbd>해제하지 않고 바로 삭제</kbd> 검사 없이 삭제, 암호화 파일은 그대로 남음</li></ul>`],
-  scan:['검사','디스크 검사',`<p>.sLDH / .mLDH 파일을 찾습니다. 검사 중에도 PC를 사용할 수 있습니다.</p><ul><li><kbd>중지</kbd> 검사를 일시 중지</li></ul>`],
-  stopped:['검사','검사 중지',`<ul><li><kbd>계속 이어서 검사</kbd> 중지한 지점부터 다시 검사</li><li><kbd>전체 취소 후 바로 삭제</kbd> 검사를 끝내고 해제 없이 삭제 단계로 이동</li></ul>`],
-  found:['검사 결과','암호화 파일 목록',`<ul><li><kbd>일괄 해제 진행 &gt;</kbd> 목록 전체 해제</li><li><kbd>해제하지 않고 삭제</kbd> 해제 없이 삭제 단계로</li></ul>`],
-  password:['해제','수동 암호화 비밀번호',`<p>수동 암호화 파일이 있으면 비밀번호를 입력해야 해제가 시작됩니다.</p><div class="note">비밀번호가 다른 파일은 해제되지 않습니다.</div>`],
-  decrypt:['해제','일괄 해제 진행',`<p>목록의 파일을 차례로 해제합니다.</p>`,true],
-  result:['해제 결과','해제 실패 파일 확인',`<ul><li><kbd>위치 열기</kbd> 파일 위치를 열어 직접 해제</li><li><kbd>재확인</kbd> 직접 해제한 뒤 상태 다시 확인</li><li><kbd>다음 &gt;</kbd> 남은 파일을 두고 삭제 단계로</li></ul>`],
-  skip:['최종 확인','해제하지 않고 삭제 동의',`<p>남은 암호화 파일은 삭제 후 영구적으로 열 수 없습니다.</p><ul><li>동의에 체크해야 다음으로 진행할 수 있습니다.</li></ul>`],
-  uninstall:['삭제','에이전트 삭제 진행',`<p>삭제가 끝날 때까지 잠시 기다려 주세요. 진행 중에는 취소할 수 없습니다.</p>`],
-  done:['완료','삭제 완료 · 재시작',`<p>삭제를 마무리하려면 PC를 다시 시작해 주세요.</p><ul><li><b>지금 사용자PC를 다시 시작</b> (권장)</li><li>나중에 다시 시작</li></ul>`],
-  cancel:['취소','삭제 취소',`<p>취소하거나 창을 닫으면 PC 상태는 그대로 유지됩니다.</p>`,true],
-};
-
-/* ---------- 렌더 ---------- */
-function render(){
-  $('win').innerHTML = titlebar() + VIEWS[state]();
-  const [tag,h,html,sim] = G[state];
-  $('guide').innerHTML = `<span class="tag">${tag}</span><h3>${h}</h3>${html}`;
-  const cur = STEP_OF[state];
-  $('steps').innerHTML = STEP_LABELS.map((l,i)=>{
-    const c = cur<0 ? '' : (i<cur || state==='done') ? 'done' : i===cur ? 'now' : '';
-    return `<div class="step ${c}"><b>${i+1}</b>${l}</div>`;
-  }).join('');
-  const pwd=$('pwd'), agree=$('agree'), go=$('goBtn');
-  const setGo = on => { go.disabled=!on; go.classList.toggle('primary',on); go.previousElementSibling.classList.toggle('primary',!on); };
-  if(pwd) pwd.addEventListener('input',()=>setGo(!!pwd.value));
-  if(agree) agree.addEventListener('change',()=>setGo(agree.checked));
-  fit();
-}
-function go(s){ clearInterval(timer); state=s; render(); RUN[s] && RUN[s](); }
-function animate(ms, from, onTick, onEnd){
-  const t0=performance.now()-from*ms;
-  timer=setInterval(()=>{ const p=Math.min(1,(performance.now()-t0)/ms); onTick(p); if(p>=1){clearInterval(timer); onEnd();} },50);
-}
-const scanned = () => Math.floor(SCAN_TOTAL*scanP);
-const foundSoFar = () => Math.floor(FOUND*Math.pow(scanP,1.1));
-const RUN = {
-  scan:()=> animate(6000, scanP, p=>{
-      scanP=p; $('bar').style.width=(p*100)+'%';
-      $('cnt').textContent=`검사한 파일 ${fmt(scanned())} · 발견 ${foundSoFar()}건`;
-    }, ()=>{ log(`검사 완료: ${FOUND}건 발견`); go('found'); }),
-  decrypt:()=> animate(4500, 0, p=>{
-      const n=Math.floor(FOUND*p); $('bar').style.width=(p*100)+'%';
-      $('cur').textContent='해제 중: '+files[Math.min(n,FOUND-1)].path; $('cnt').textContent=`${n} / ${FOUND}`;
-    }, ()=>{ log(`해제 완료: 성공 ${FOUND-failed.length}건, 실패 ${failed.length}건`); go('result'); }),
-  uninstall:()=>{
-    const L=[[5,'프로그램 설치 여부가 확인되었습니다.'],[11,'에이전트 삭제 정보 전송이 완료되었습니다.'],[17,'시스템 환경설정이 설치 전 상태로 복원되었습니다.'],
-      [23,'서비스가 성공적으로 종료되었습니다.'],[30,'서비스 등록 해제가 완료되었습니다.'],[36,'서비스 등록 해제가 완료되었습니다.'],
-      [42,'컨텍스트 메뉴 등록이 해제되었습니다.'],[50,'플러그인 삭제가 완료되었습니다.'],[57,'서브모듈 삭제가 완료되었습니다.'],
-      [64,'안전모드 옵션 복구가 완료되었습니다.'],[70,'멀티부팅 옵션 복구가 완료되었습니다.'],[76,'레지스트리 정보가 삭제되었습니다.'],
-      [82,'드라이버 삭제가 완료되었습니다.'],[100,null]];
-    let k=0;
-    timer=setInterval(()=>{
-      const [pct,msg]=L[k++];
-      $('bar').style.width=pct+'%'; $('pct').textContent=pct+'%';
-      if(msg){ const d=document.createElement('div'); d.textContent=msg; $('ulog').append(d); $('ulog').scrollTop=1e6; }
-      if(k>=L.length){ clearInterval(timer); setTimeout(()=>{ log('에이전트 삭제 완료'); go('done'); },700); }
-    },420);
-  }
-};
-function toast(msg){ const t=$('toast'); if(!t) return; t.textContent=msg; t.classList.add('on'); setTimeout(()=>t.classList.remove('on'),1600); }
-
-const A = {
-  toConfirm:()=>{ log('[삭제 >]'); go('confirm'); },
-  toAsk:()=>{ log('[삭제 >] 주의사항 확인'); go('ask'); },
-  toScan:()=>{ log('[해제 후 삭제 >]'); scanP=0; go('scan'); },
-  skipNow:()=>{ log('[해제하지 않고 바로 삭제]'); mode='skipNow'; skipCount=0; go('uninstall'); },
-  stopScan:()=>{ log('[중지]'); go('stopped'); },
-  resumeScan:()=>{ log('[계속 이어서 검사]'); go('scan'); },
-  stopToSkip:()=>{ log('[전체 취소 후 바로 삭제]'); skipCount=foundSoFar(); skipBack='stopped'; go('skip'); },
-  toPassword:()=>{ log('[일괄 해제 진행 >]'); go('password'); },
-  toDecrypt:()=>{ log('[해제 시작 >] 비밀번호 입력'); go('decrypt'); },
-  foundToSkip:()=>{ log('[해제하지 않고 삭제]'); skipCount=FOUND; skipBack='found'; go('skip'); },
-  resultToSkip:()=>{ log('[다음 >]'); skipCount=failed.length; skipBack='result'; go('skip'); },
-  openLoc:()=>toast('탐색기에서 파일 위치를 엽니다'),
-  recheck:()=>{ log('[재확인]'); toast(`재확인 결과: 실패 ${failed.length}건 그대로입니다`); },
-  back:()=>{ log('[< 이전]'); go(state==='password' ? 'found' : skipBack); },
-  toUninstall:()=>{ log('[삭제 계속 >] 동의'); mode=null; go('uninstall'); },
-  close:()=>{ if(['decrypt','uninstall','done','cancel'].includes(state)) return; log('[취소]'); go('cancel'); },
-  restart:()=>{ mode=null; scanP=0; skipCount=0; $('log').innerHTML=''; go('start'); },
-};
-$('win').addEventListener('click', e=>{ const b=e.target.closest('[data-act]'); if(b && !b.disabled) A[b.dataset.act](); });
-$('restart').onclick=A.restart;
-$('hintToggle').onchange=e=>$('desk').classList.toggle('hints',e.target.checked);
-
-/* 임베드 칸 크기에 맞춰 전체 화면을 확대/축소 (스크롤 없음) */
-function fit(){
-  const st=$('stage'); st.style.zoom=1;
-  const z=Math.min(innerWidth/st.offsetWidth, innerHeight/st.offsetHeight, 1.4);
-  st.style.zoom=z;
-}
-addEventListener('resize',fit);
-render();
 </script>
 </body>
 </html>
