@@ -414,16 +414,6 @@ const VIEWS = {
       <div class="status"><span id="cur"></span><span id="cnt"></span></div>`)
     + foot([{label:'취소',act:'close',dis:true}]),
 
-  result:()=> body(`<h2 style="margin-bottom:4px">일부 파일을 해제하지 못했습니다.</h2>
-      <p class="red">아래 파일은 해제되지 않았습니다. 경로에서 [위치 열기] 버튼으로 해당 파일 위치를 열어 직접 해제할 수 있습니다. 해제하지 못한 파일은 에이전트 삭제 후 열 수 없습니다.</p>
-      <div class="stats"><div class="a">대상 파일 ${FOUND}건</div><div class="s">해제 성공 ${FOUND-failed.length}건</div><div class="f">실패 ${failed.length}건</div></div>
-      <div class="tbl" style="height:196px"><table>
-        <colgroup><col><col style="width:152px"><col style="width:220px"></colgroup>
-        <thead><tr><th colspan="2">파일 경로</th><th>사유</th></tr></thead>
-        <tbody>${failed.map(f=>`<tr><td title="${f.path}">${f.path}</td><td class="b"><button class="open" data-act="openLoc">위치 열기</button></td><td class="red">기타 오류</td></tr>`).join('')}</tbody>
-      </table></div>`)
-    + foot([{label:'재확인',act:'recheck'},{label:'다음 &gt;',act:'resultToSkip',cls:'primary hint'}]),
-
   skip:()=> body(`<h2>암호화 파일을 해제하지 않고 에이전트를 삭제하시겠습니까?</h2>
       <p class="red">해제되지 않은 암호화 파일 ${skipCount}건이 남아 있습니다. 에이전트를 삭제하면 남아 있는 암호화 파일은 영구적으로 열 수 없으며, 삭제 후에는 복구할 방법이 없습니다.</p>
       <label class="chk"><input type="checkbox" id="agree"> 위 내용을 확인했으며, 암호화 파일을 해제하지 않고 에이전트를 삭제하는 것에 동의합니다.</label>`)
@@ -463,7 +453,7 @@ const RUN = {
   decrypt:()=> animate(4500, 0, p=>{
       const n=Math.floor(FOUND*p); $('bar').style.width=(p*100)+'%';
       $('cur').textContent='해제 중: '+files[Math.min(n,FOUND-1)].path; $('cnt').textContent=`${n} / ${FOUND}`;
-    }, ()=> go('result')),
+    }, ()=> go('uninstall')),
   uninstall:()=>{
     const L=[[5,'프로그램 설치 여부가 확인되었습니다.'],[11,'에이전트 삭제 정보 전송이 완료되었습니다.'],[17,'시스템 환경설정이 설치 전 상태로 복원되었습니다.'],
       [23,'서비스가 성공적으로 종료되었습니다.'],[30,'서비스 등록 해제가 완료되었습니다.'],[36,'서비스 등록 해제가 완료되었습니다.'],
@@ -494,9 +484,6 @@ const A = {
   toPassword:()=> go('password'),
   toDecrypt:()=> go('decrypt'),
   foundToSkip:()=>{ skipCount=FOUND; skipBack='found'; go('skip'); },
-  resultToSkip:()=>{ skipCount=failed.length; skipBack='result'; go('skip'); },
-  openLoc:()=> toast('탐색기에서 파일 위치를 엽니다.'),
-  recheck:()=> toast(`재확인 결과: 실패 ${failed.length}건 그대로입니다.`),
   back:()=> go(state==='password' ? 'found' : skipBack),
   toUninstall:()=> go('uninstall'),
   close:()=>{ if(['decrypt','uninstall'].includes(state)) return; closeWizard(); },
